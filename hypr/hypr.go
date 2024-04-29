@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net"
 	"os"
+
+	"github.com/skrewby/wmt/workspace"
 )
 
 // https://wiki.hyprland.org/IPC/
@@ -57,10 +59,21 @@ func (h Hypr) runServer() {
 		fmt.Println("Error while reading socket: ", err)
 		return
 	}
-
-	fmt.Println(string(buffer[:msg_size]))
-
 	connection.Close()
+
+	data := string(buffer[:msg_size])
+
+	fmt.Println("Raw data")
+	fmt.Println("------------------------------------------------")
+	fmt.Println(data)
+	fmt.Println("------------------------------------------------")
+
+	fmt.Println("Parsed data")
+	workspaces := workspace.ParseHyprWorkspaceData(data)
+	for i := 0; i < len(workspaces); i++ {
+		fmt.Println("Workspace ", i+1)
+	}
+
 }
 
 func (h Hypr) GetHIS() string {
