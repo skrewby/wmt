@@ -8,11 +8,18 @@ import (
 )
 
 type Workspace struct {
-	Id          int
-	Monitor     int
-	Windows     int
-	Window      string
-	WindowTitle string
+	Id           int
+	Monitor      int
+	Windows      int
+	Window       string
+	WindowTitle  string
+	InitialTitle string
+	Class        string
+}
+
+type Client struct {
+	Class        string
+	InitialTitle string
 }
 
 func ParseHyprWorkspaceData(str string) []Workspace {
@@ -28,6 +35,21 @@ func ParseHyprWorkspaceData(str string) []Workspace {
 	}
 
 	return workspaces
+}
+
+func ParseHyprClientData(str string) map[string]Client {
+	clients := make(map[string]Client)
+
+	clients_str := strings.Split(str, "\n\n")
+	for _, client_str := range clients_str {
+		id, client, err := parseClientStr(client_str)
+		if err != nil {
+			continue
+		}
+		clients[id] = client
+	}
+
+	return clients
 }
 
 func parseWorkspaceStr(str string) (Workspace, error) {
@@ -50,14 +72,42 @@ func parseWorkspaceStr(str string) (Workspace, error) {
 	window_title := getFieldValueStr(lines[5], "lastwindowtitle")
 
 	ws := Workspace{
-		id,
-		monitor,
-		windows,
-		window,
-		window_title,
+		Id:           id,
+		Monitor:      monitor,
+		Windows:      windows,
+		Window:       window,
+		WindowTitle:  window_title,
+		InitialTitle: "",
+		Class:        "",
 	}
 
 	return ws, nil
+}
+
+func parseClientStr(str string) (string, Client, error) {
+	lines := strings.Split(str, "\n")
+
+	if len(lines) != 21 {
+		return "", Client{}, errors.New("Not a valid workspace string")
+	}
+
+	id := strings.SplitN(lines[0], " ", -1)[1]
+
+	class := getFieldValueStr(lines[8], "class")
+	initial_title := getFieldValueStr(lines[11], "initialTitle")
+
+	client := Client{
+		InitialTitle: initial_title,
+		Class:        class,
+	}
+
+	return id, client, nil
+}
+
+func (ws *Workspace) AddClientData(clients map[string]Client) {
+	client := clients[ws.Window]
+	ws.Class = client.Class
+	ws.InitialTitle = client.InitialTitle
 }
 
 func (ws Workspace) Print() {
@@ -66,6 +116,8 @@ func (ws Workspace) Print() {
 	fmt.Println("\tNum Windows:", ws.Windows)
 	fmt.Println("\tWindow ID:", ws.Window)
 	fmt.Println("\tWindow Title:", ws.WindowTitle)
+	fmt.Println("\tInitial Title:", ws.InitialTitle)
+	fmt.Println("\tClass:", ws.Class)
 }
 
 func getFieldValueStr(line string, field string) string {
@@ -84,7 +136,7 @@ func getFieldValueInt(line string, field string) int {
 	after, _ := strings.CutPrefix(strings.TrimSpace(line), sep)
 	val, err := strconv.Atoi(after)
 	if err != nil {
-		fmt.Println("Monitor ID is not an integer")
+		fmt.Println("Value is not an integer")
 		val = -1
 	}
 	return val

@@ -44,6 +44,18 @@ func (h Hypr) Workspaces() []Workspace {
 	}
 
 	workspaces = ParseHyprWorkspaceData(data)
+
+	data, err = h.writeToSocket("clients")
+	if err != nil {
+		return workspaces
+	}
+	clients := ParseHyprClientData(data)
+
+	for i, ws := range workspaces {
+		ws.AddClientData(clients)
+		workspaces[i] = ws
+	}
+
 	return workspaces
 }
 
