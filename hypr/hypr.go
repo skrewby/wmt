@@ -6,7 +6,7 @@ import (
 	"net"
 	"os"
 
-	"github.com/skrewby/wmt/workspace"
+	. "github.com/skrewby/wmt/workspace"
 )
 
 // https://wiki.hyprland.org/IPC/
@@ -32,48 +32,37 @@ func Connect() (Hypr, error) {
 		dir,
 	}
 
-	h.runServer()
-
 	return h, nil
 }
 
-func (h Hypr) runServer() {
+func (h Hypr) Workspaces() []Workspace {
+	var workspaces []Workspace
 	// For some reason XDG_RUNTIME_DIR is not working and have to use /tmp/ instead
 	addr := fmt.Sprintf("/tmp/hypr/%s/.socket.sock", h.his)
 
 	connection, err := net.Dial("unix", addr)
 	if err != nil {
 		fmt.Println("Error connecting to socket: ", err)
-		return
+		return workspaces
 	}
 
 	_, err = connection.Write([]byte("workspaces"))
 	if err != nil {
 		fmt.Println("Error writing to socket: ", err)
-		return
+		return workspaces
 	}
 
 	buffer := make([]byte, 4096)
 	msg_size, err := connection.Read(buffer)
 	if err != nil {
 		fmt.Println("Error while reading socket: ", err)
-		return
+		return workspaces
 	}
 	connection.Close()
 
 	data := string(buffer[:msg_size])
-
-	fmt.Println("Raw data")
-	fmt.Println("------------------------------------------------")
-	fmt.Println(data)
-	fmt.Println("------------------------------------------------")
-
-	fmt.Println("Parsed data")
-	workspaces := workspace.ParseHyprWorkspaceData(data)
-	for i := 0; i < len(workspaces); i++ {
-		fmt.Println("Workspace ", i+1)
-	}
-
+	workspaces = ParseHyprWorkspaceData(data)
+	return workspaces
 }
 
 func (h Hypr) GetHIS() string {

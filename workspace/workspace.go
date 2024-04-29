@@ -20,10 +20,11 @@ func ParseHyprWorkspaceData(str string) []Workspace {
 
 	workspaces_str := strings.Split(str, "\n\n")
 	for _, workspace_str := range workspaces_str {
-		_, err := parseWorkspaceStr(workspace_str)
+		ws, err := parseWorkspaceStr(workspace_str)
 		if err != nil {
 			continue
 		}
+		workspaces = append(workspaces, ws)
 	}
 
 	return workspaces

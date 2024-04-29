@@ -7,8 +7,13 @@ import (
 )
 
 func main() {
-	_, err := hypr.Connect()
+	client, err := hypr.Connect()
 	if err != nil {
 		fmt.Printf("Could not connect to the hyprland server: %s", err)
+	}
+
+	workspaces := client.Workspaces()
+	for _, ws := range workspaces {
+		ws.Print()
 	}
 }
