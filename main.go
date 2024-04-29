@@ -16,7 +16,7 @@ func main() {
 	}
 
 	workspaces := client.Workspaces()
-	p := tea.NewProgram(tui.CreateModel(workspaces))
+	p := tea.NewProgram(tui.CreateModel(client, workspaces))
 	if _, err := p.Run(); err != nil {
 		fmt.Println("Error running the UI: ", err)
 		os.Exit(1)

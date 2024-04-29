@@ -4,17 +4,20 @@ import (
 	"fmt"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/skrewby/wmt/hypr"
 	w "github.com/skrewby/wmt/workspace"
 )
 
 type Model struct {
 	workspaces []w.Workspace
+	client     hypr.Hypr
 	cursor     int
 }
 
-func CreateModel(workspaces []w.Workspace) Model {
+func CreateModel(client hypr.Hypr, workspaces []w.Workspace) Model {
 	return Model{
 		workspaces: workspaces,
+		client:     client,
 		cursor:     0,
 	}
 }
@@ -39,6 +42,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.cursor < len(m.workspaces)-1 {
 				m.cursor++
 			}
+
+		// Switch workspace
+		case "enter", " ":
+			if len(m.workspaces) > 0 {
+				m.client.SwitchToWorkspace(m.cursor + 1)
+			}
+			return m, tea.Quit
 		}
 	}
 

@@ -37,32 +37,45 @@ func Connect() (Hypr, error) {
 
 func (h Hypr) Workspaces() []Workspace {
 	var workspaces []Workspace
+
+	data, err := h.writeToSocket("workspaces")
+	if err != nil {
+		return workspaces
+	}
+
+	workspaces = ParseHyprWorkspaceData(data)
+	return workspaces
+}
+
+func (h Hypr) SwitchToWorkspace(id int) {
+	cmd := fmt.Sprintf("dispatch workspace %d", id)
+	_, _ = h.writeToSocket(cmd)
+}
+
+func (h Hypr) writeToSocket(cmd string) (string, error) {
 	// For some reason XDG_RUNTIME_DIR is not working and have to use /tmp/ instead
 	addr := fmt.Sprintf("/tmp/hypr/%s/.socket.sock", h.his)
 
 	connection, err := net.Dial("unix", addr)
 	if err != nil {
-		fmt.Println("Error connecting to socket: ", err)
-		return workspaces
+		return "", errors.New("Error connecting to socket")
 	}
 
-	_, err = connection.Write([]byte("workspaces"))
+	_, err = connection.Write([]byte(cmd))
 	if err != nil {
-		fmt.Println("Error writing to socket: ", err)
-		return workspaces
+		return "", errors.New("Error writing to socket")
 	}
 
 	buffer := make([]byte, 4096)
 	msg_size, err := connection.Read(buffer)
 	if err != nil {
-		fmt.Println("Error while reading socket: ", err)
-		return workspaces
+		return "", errors.New("Error reading socket")
 	}
 	connection.Close()
 
 	data := string(buffer[:msg_size])
-	workspaces = ParseHyprWorkspaceData(data)
-	return workspaces
+
+	return data, nil
 }
 
 func (h Hypr) GetHIS() string {
