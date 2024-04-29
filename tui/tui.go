@@ -1,24 +1,59 @@
 package tui
 
 import (
-	"fmt"
+	"strconv"
 
+	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/skrewby/wmt/hypr"
 	w "github.com/skrewby/wmt/workspace"
 )
+
+var baseStyle = lipgloss.NewStyle().
+	BorderStyle(lipgloss.NormalBorder()).
+	BorderForeground(lipgloss.Color("240"))
 
 type Model struct {
 	workspaces []w.Workspace
 	client     hypr.Hypr
 	cursor     int
+	table      table.Model
 }
 
 func CreateModel(client hypr.Hypr, workspaces []w.Workspace) Model {
+	columns := []table.Column{
+		{Title: "ID", Width: 4},
+		{Title: "Monitor", Width: 7},
+		{Title: "Title", Width: 20},
+	}
+	rows := make([]table.Row, 0)
+	for _, ws := range workspaces {
+		rows = append(rows, table.Row{strconv.Itoa(ws.Id), strconv.Itoa(ws.Monitor), ws.WindowTitle})
+	}
+	t := table.New(
+		table.WithColumns(columns),
+		table.WithRows(rows),
+		table.WithFocused(true),
+		table.WithHeight(len(workspaces)),
+	)
+	s := table.DefaultStyles()
+	s.Header = s.Header.
+		BorderStyle(lipgloss.NormalBorder()).
+		BorderForeground(lipgloss.Color("240")).
+		BorderBottom(true).
+		Bold(false)
+	s.Selected = s.Selected.
+		Foreground(lipgloss.Color("229")).
+		Background(lipgloss.Color("57")).
+		Bold(false)
+	t.SetStyles(s)
+
 	return Model{
 		workspaces: workspaces,
 		client:     client,
 		cursor:     0,
+		table:      t,
 	}
 }
 
@@ -27,6 +62,8 @@ func (m Model) Init() tea.Cmd {
 }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var cmd tea.Cmd
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -52,21 +89,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
-	return m, nil
+	m.table, cmd = m.table.Update(msg)
+	return m, cmd
 }
 
 func (m Model) View() string {
-	s := ""
-
-	// Iterate over the workspaces
-	for i, ws := range m.workspaces {
-		cursor := " "
-		if m.cursor == i {
-			cursor = ">"
-		}
-
-		s += fmt.Sprintf("%s %d %s\n", cursor, ws.Id, ws.Window_title)
-	}
-
-	return s
+	return baseStyle.Render(m.table.View()) + "\n"
 }

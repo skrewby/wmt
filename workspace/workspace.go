@@ -8,11 +8,11 @@ import (
 )
 
 type Workspace struct {
-	Id           int
-	Monitor      int
-	Windows      int
-	Window       string
-	Window_title string
+	Id          int
+	Monitor     int
+	Windows     int
+	Window      string
+	WindowTitle string
 }
 
 func ParseHyprWorkspaceData(str string) []Workspace {
@@ -65,7 +65,7 @@ func (ws Workspace) Print() {
 	fmt.Println("\tMonitor:", ws.Monitor)
 	fmt.Println("\tNum Windows:", ws.Windows)
 	fmt.Println("\tWindow ID:", ws.Window)
-	fmt.Println("\tWindow Title:", ws.Window_title)
+	fmt.Println("\tWindow Title:", ws.WindowTitle)
 }
 
 func getFieldValueStr(line string, field string) string {
