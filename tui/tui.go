@@ -8,6 +8,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/skrewby/wmt/hypr"
 	w "github.com/skrewby/wmt/workspace"
+	"golang.org/x/term"
 )
 
 var baseStyle = lipgloss.NewStyle().
@@ -22,10 +23,13 @@ type Model struct {
 }
 
 func CreateModel(client hypr.Hypr, workspaces []w.Workspace) Model {
+	width, _, _ := term.GetSize(0)
+	fill_width := width - 4 - 7 - 8
+
 	columns := []table.Column{
 		{Title: "ID", Width: 4},
 		{Title: "Monitor", Width: 7},
-		{Title: "Title", Width: 20},
+		{Title: "Title", Width: fill_width},
 	}
 	rows := make([]table.Row, 0)
 	for _, ws := range workspaces {
