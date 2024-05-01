@@ -93,6 +93,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.client.SwitchToWorkspace(m.cursor + 1)
 			}
 			return m, tea.Quit
+
+		case "1", "2", "3", "4", "5", "6", "7", "8", "9":
+			r := msg.String()
+			sel, err := strconv.Atoi(r)
+			if err == nil {
+				m.client.SwitchToWorkspace(sel)
+			}
+			return m, tea.Quit
 		}
 	}
 
