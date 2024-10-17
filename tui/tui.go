@@ -90,7 +90,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// Switch workspace
 		case "enter", " ":
 			if len(m.workspaces) > 0 {
-				m.client.SwitchToWorkspace(m.cursor + 1)
+				wp := m.workspaces[m.cursor]
+				m.client.SwitchToWorkspace(wp.Id)
 			}
 			return m, tea.Quit
 
