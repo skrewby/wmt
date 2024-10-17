@@ -69,7 +69,6 @@ func (h Hypr) SwitchToWorkspace(id int) {
 }
 
 func (h Hypr) writeToSocket(cmd string) (string, error) {
-	// For some reason XDG_RUNTIME_DIR is not working and have to use /tmp/ instead
 	runtime_dir := os.Getenv("XDG_RUNTIME_DIR")
 	addr := fmt.Sprintf("%s/hypr/%s/.socket.sock", runtime_dir, h.his)
 
