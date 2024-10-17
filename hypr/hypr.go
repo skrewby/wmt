@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"sort"
 
 	. "github.com/skrewby/wmt/workspace"
 )
@@ -56,6 +57,9 @@ func (h Hypr) Workspaces() []Workspace {
 		workspaces[i] = ws
 	}
 
+	sort.Slice(workspaces, func(i, j int) bool {
+		return workspaces[i].Id < workspaces[j].Id
+	})
 	return workspaces
 }
 
