@@ -1,10 +1,13 @@
+mod client_table;
+
 use std::io;
 
 use anyhow::{Context, Result};
+use client_table::ClientTable;
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
 use ratatui::{
     buffer::Buffer,
-    layout::Rect,
+    layout::{Margin, Rect},
     style::Stylize,
     symbols::border,
     text::Line,
@@ -14,12 +17,13 @@ use ratatui::{
 
 use crate::hypr::Hypr;
 
-pub struct App {
+pub struct App<'a> {
     exit: bool,
     hypr: Hypr,
+    client_table: ClientTable<'a>,
 }
 
-impl App {
+impl<'a> App<'_> {
     pub fn run(&mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {
         while !self.exit {
             terminal.draw(|frame| self.draw(frame))?;
@@ -28,9 +32,14 @@ impl App {
         Ok(())
     }
 
-    pub fn new() -> Result<App> {
+    pub fn new() -> Result<App<'a>> {
         let hypr = Hypr::new().context("Getting information from Hyprland")?;
-        Ok(App { exit: false, hypr })
+        let client_table = ClientTable::new(&hypr.clients);
+        Ok(App {
+            exit: false,
+            hypr,
+            client_table,
+        })
     }
 
     fn draw(&self, frame: &mut Frame) {
@@ -59,7 +68,7 @@ impl App {
     }
 }
 
-impl Widget for &App {
+impl Widget for &App<'_> {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let instructions = Line::from(vec![
             " Search ".into(),
@@ -69,19 +78,17 @@ impl Widget for &App {
             " Quit ".into(),
             "<Q> ".blue().bold(),
         ]);
-        let block = Block::bordered()
+
+        Block::bordered()
             .title_top(Line::from(" Workspaces ").bold().centered())
             .title_bottom(instructions.centered())
-            .border_set(border::THICK);
-
-        let mut client_str = String::new();
-        for client in self.hypr.clients.iter() {
-            client_str.push_str(&client.title);
-            client_str.push_str("\n");
-        }
-        Paragraph::new(client_str)
-            .centered()
-            .block(block)
+            .border_set(border::THICK)
             .render(area, buf);
+
+        let area = area.inner(Margin {
+            horizontal: 1,
+            vertical: 1,
+        });
+        self.client_table.render(area, buf);
     }
 }
