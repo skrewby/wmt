@@ -14,7 +14,7 @@ pub struct ClientTable<'a> {
 
 impl<'a> ClientTable<'_> {
     pub fn new(clients: &Vec<Client>) -> ClientTable<'a> {
-        let mut state = TableState::default();
+        let state = TableState::default().with_selected(Some(0));
         let widths = [
             Constraint::Max(10),
             Constraint::Min(30),
@@ -31,9 +31,8 @@ impl<'a> ClientTable<'_> {
             })
             .collect();
         let table = Table::new(rows, widths)
-            .header(Row::new(vec!["Class", "Title", "Workspace"]))
+            .header(Row::new(vec!["Class", "Title", "Workspace"]).bold())
             .row_highlight_style(Style::new().reversed());
-        state.select(Some(1));
 
         ClientTable { state, table }
     }

@@ -10,17 +10,23 @@ use ratatui::{
     layout::{Margin, Rect},
     style::Stylize,
     symbols::border,
-    text::Line,
-    widgets::{Block, Paragraph, Widget},
+    text::{Line, Span},
+    widgets::{Block, Widget},
     DefaultTerminal, Frame,
 };
 
 use crate::hypr::Hypr;
 
+enum SelectedScreen {
+    Clients,
+    Workspaces,
+}
+
 pub struct App<'a> {
     exit: bool,
     hypr: Hypr,
     client_table: ClientTable<'a>,
+    current_screen: SelectedScreen,
 }
 
 impl<'a> App<'_> {
@@ -39,6 +45,7 @@ impl<'a> App<'_> {
             exit: false,
             hypr,
             client_table,
+            current_screen: SelectedScreen::Clients,
         })
     }
 
@@ -59,6 +66,7 @@ impl<'a> App<'_> {
     fn handle_key_event(&mut self, key_event: KeyEvent) {
         match key_event.code {
             KeyCode::Char('q') => self.exit(),
+            KeyCode::Tab => self.next_border_screen(),
             _ => {}
         }
     }
@@ -66,21 +74,36 @@ impl<'a> App<'_> {
     fn exit(&mut self) {
         self.exit = true;
     }
+
+    fn next_border_screen(&mut self) {
+        match self.current_screen {
+            SelectedScreen::Clients => self.current_screen = SelectedScreen::Workspaces,
+            SelectedScreen::Workspaces => self.current_screen = SelectedScreen::Clients,
+        };
+    }
+
+    fn border_title(&self) -> Vec<Span<'a>> {
+        let mut lines: Vec<Span> = vec![" Clients ".into(), "|".into(), " Workspaces ".into()];
+
+        match self.current_screen {
+            SelectedScreen::Clients => lines[0] = lines[0].clone().blue(),
+            SelectedScreen::Workspaces => lines[2] = lines[2].clone().blue(),
+        };
+
+        lines
+    }
 }
 
 impl Widget for &App<'_> {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let instructions = Line::from(vec![
-            " Search ".into(),
-            "</>".blue().bold(),
             " Help ".into(),
             "<?>".blue().bold(),
             " Quit ".into(),
             "<Q> ".blue().bold(),
         ]);
-
         Block::bordered()
-            .title_top(Line::from(" Workspaces ").bold().centered())
+            .title_top(self.border_title())
             .title_bottom(instructions.centered())
             .border_set(border::THICK)
             .render(area, buf);
