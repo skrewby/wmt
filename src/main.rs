@@ -1,11 +1,13 @@
 mod app;
+mod hypr;
 
+use anyhow::Result;
 use app::App;
-use std::io;
 
-fn main() -> io::Result<()> {
+fn main() -> Result<()> {
     let mut terminal = ratatui::init();
-    let app_result = App::default().run(&mut terminal);
+    let mut app = App::new()?;
+    let app_result = app.run(&mut terminal);
     ratatui::restore();
-    app_result
+    Ok(app_result?)
 }

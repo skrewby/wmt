@@ -1,22 +1,22 @@
 use std::io;
 
+use anyhow::{Context, Result};
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
 use ratatui::{
     buffer::Buffer,
-    layout::{Alignment, Rect},
+    layout::Rect,
     style::Stylize,
     symbols::border,
     text::Line,
-    widgets::{
-        block::{Position, Title},
-        Block, Paragraph, Widget,
-    },
+    widgets::{Block, Paragraph, Widget},
     DefaultTerminal, Frame,
 };
 
-#[derive(Debug, Default)]
+use crate::hypr::Hypr;
+
 pub struct App {
     exit: bool,
+    hypr: Hypr,
 }
 
 impl App {
@@ -26,6 +26,11 @@ impl App {
             self.handle_events()?;
         }
         Ok(())
+    }
+
+    pub fn new() -> Result<App> {
+        let hypr = Hypr::new().context("Getting information from Hyprland")?;
+        Ok(App { exit: false, hypr })
     }
 
     fn draw(&self, frame: &mut Frame) {
@@ -56,25 +61,25 @@ impl App {
 
 impl Widget for &App {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        let title = Title::from(" Workspaces ".bold());
-        let instructions = Title::from(Line::from(vec![
+        let instructions = Line::from(vec![
             " Search ".into(),
             "</>".blue().bold(),
             " Help ".into(),
             "<?>".blue().bold(),
             " Quit ".into(),
             "<Q> ".blue().bold(),
-        ]));
+        ]);
         let block = Block::bordered()
-            .title(title.alignment(Alignment::Center))
-            .title(
-                instructions
-                    .alignment(Alignment::Center)
-                    .position(Position::Bottom),
-            )
+            .title_top(Line::from(" Workspaces ").bold().centered())
+            .title_bottom(instructions.centered())
             .border_set(border::THICK);
 
-        Paragraph::new("HELLO WORLD")
+        let mut client_str = String::new();
+        for client in self.hypr.clients.iter() {
+            client_str.push_str(&client.title);
+            client_str.push_str("\n");
+        }
+        Paragraph::new(client_str)
             .centered()
             .block(block)
             .render(area, buf);
