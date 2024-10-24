@@ -1,4 +1,5 @@
 mod client_table;
+mod workspace_table;
 
 use std::io;
 
@@ -14,6 +15,7 @@ use ratatui::{
     widgets::{Block, Widget},
     DefaultTerminal, Frame,
 };
+use workspace_table::WorkspaceTable;
 
 use crate::hypr::Hypr;
 
@@ -26,6 +28,7 @@ pub struct App<'a> {
     exit: bool,
     hypr: Hypr,
     client_table: ClientTable<'a>,
+    workspace_table: WorkspaceTable<'a>,
     current_screen: SelectedScreen,
 }
 
@@ -41,10 +44,12 @@ impl<'a> App<'_> {
     pub fn new() -> Result<App<'a>> {
         let hypr = Hypr::new().context("Getting information from Hyprland")?;
         let client_table = ClientTable::new(&hypr.clients);
+        let workspace_table = WorkspaceTable::new(&hypr.workspaces);
         Ok(App {
             exit: false,
             hypr,
             client_table,
+            workspace_table,
             current_screen: SelectedScreen::Clients,
         })
     }
@@ -112,6 +117,10 @@ impl Widget for &App<'_> {
             horizontal: 1,
             vertical: 1,
         });
-        self.client_table.render(area, buf);
+
+        match self.current_screen {
+            SelectedScreen::Clients => self.client_table.render(area, buf),
+            SelectedScreen::Workspaces => self.workspace_table.render(area, buf),
+        };
     }
 }
