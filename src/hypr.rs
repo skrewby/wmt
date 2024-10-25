@@ -1,17 +1,12 @@
-use std::os::unix::net::UnixStream;
-
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
-
-pub mod hyprctl;
+use std::env;
+use std::io::{Read, Write};
+use std::os::unix::net::UnixStream;
 
 pub struct Hypr {
     pub workspaces: Vec<Workspace>,
     pub clients: Vec<Client>,
-}
-
-pub struct Hyprctl {
-    stream: UnixStream,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -41,11 +36,46 @@ pub struct Client {
 
 impl Hypr {
     pub fn new() -> Result<Hypr> {
-        let workspaces = Hyprctl::connect()?.get_workspaces()?;
-        let clients = Hyprctl::connect()?.get_clients()?;
+        let workspaces = get_workspaces()?;
+        let clients = get_clients()?;
         Ok(Hypr {
             workspaces,
             clients,
         })
     }
+}
+
+fn connect() -> Result<UnixStream> {
+    let his = env::var("HYPRLAND_INSTANCE_SIGNATURE")
+        .context("Failed to find $HYPRLAND_INSTANCE_SIGNATURE")?;
+    let root =
+        env::var("XDG_RUNTIME_DIR").context("Failed to find $HYPRLAND_INSTANCE_SIGNATURE")?;
+    let directory = format!("{}/hypr/{}/.socket.sock", root, his);
+    let stream = UnixStream::connect(directory.clone())
+        .with_context(|| format!("Can not connect to socket: {}", directory))?;
+    Ok(stream)
+}
+
+fn send_cmd(cmd: &str) -> Result<String> {
+    let mut stream = connect()?;
+    stream.write_all(cmd.as_bytes())?;
+    let mut response = String::new();
+    stream.read_to_string(&mut response)?;
+    Ok(response)
+}
+
+fn get_clients() -> Result<Vec<Client>> {
+    let res = send_cmd("j/clients").context("Error sending command: hyprctl -j clients")?;
+    let clients: Vec<Client> =
+        serde_json::from_str(&res).context(format!("Parsing client data: \n\t{}", res))?;
+
+    Ok(clients)
+}
+
+fn get_workspaces() -> Result<Vec<Workspace>> {
+    let res = send_cmd("j/workspaces").context("Error sending command: hyprctl -j workspaces")?;
+    let workspaces: Vec<Workspace> =
+        serde_json::from_str(&res).context(format!("Parsing workspace data: \n\t{}", res))?;
+
+    Ok(workspaces)
 }
