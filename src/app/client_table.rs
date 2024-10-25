@@ -61,11 +61,15 @@ impl<'a> ClientTable<'_> {
         }
     }
 
-    pub fn selected_workspace(&self) -> Option<u32> {
+    pub fn selected_workspace(&self) -> (Option<u32>, Option<String>) {
         if let Some(index) = self.state.selected() {
-            return Some(self.clients.get(index)?.workspace.id);
+            if let Some(client) = self.clients.get(index) {
+                return (Some(client.workspace.id), Some(client.address.clone()));
+            } else {
+                return (None, None);
+            }
         } else {
-            return None;
+            return (None, None);
         }
     }
 }

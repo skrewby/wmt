@@ -129,19 +129,19 @@ impl<'a> App<'_> {
     }
 
     fn switch_to_selected_workspace(&mut self) {
-        let id_option = match self.current_table {
+        let (id_option, client_address) = match self.current_table {
             SelectedTable::Clients => self.client_table.selected_workspace(),
-            SelectedTable::Workspaces => self.workspace_table.selected_workspace(),
+            SelectedTable::Workspaces => (self.workspace_table.selected_workspace(), None),
         };
         if let Some(id) = id_option {
-            if let Ok(_) = crate::hypr::switch_to_workspace(id) {
+            if let Ok(_) = crate::hypr::switch_to_workspace(id, client_address) {
                 self.exit = true;
             }
         }
     }
 
     fn switch_to_workspace(&mut self, id: u32) {
-        if let Ok(_) = crate::hypr::switch_to_workspace(id) {
+        if let Ok(_) = crate::hypr::switch_to_workspace(id, None) {
             self.exit = true;
         }
     }

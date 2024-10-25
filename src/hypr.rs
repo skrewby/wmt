@@ -29,6 +29,7 @@ pub struct Client {
     pub class: String,
     pub title: String,
     pub workspace: ClientWorkspace,
+    pub address: String,
 
     #[serde(rename = "focusHistoryID")]
     pub focus_id: u32,
@@ -82,9 +83,13 @@ fn get_workspaces() -> Result<Vec<Workspace>> {
     Ok(workspaces)
 }
 
-pub fn switch_to_workspace(id: u32) -> Result<()> {
+pub fn switch_to_workspace(id: u32, focus_client: Option<String>) -> Result<()> {
     let cmd = format!("dispatch workspace {}", id);
     send_cmd(&cmd).context(format!("Error sending command hyprctl {}", cmd))?;
+    if let Some(client_address) = focus_client {
+        let cmd = format!("dispatch focuswindow address:{}", client_address);
+        send_cmd(&cmd).context(format!("Error sending command hyprctl {}", cmd))?;
+    }
 
     Ok(())
 }
