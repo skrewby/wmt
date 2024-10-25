@@ -10,11 +10,12 @@ use crate::hypr::Client;
 pub struct ClientTable<'a> {
     state: TableState,
     table: Table<'a>,
+    clients: Vec<Client>,
     len: usize,
 }
 
 impl<'a> ClientTable<'_> {
-    pub fn new(clients: &Vec<Client>) -> ClientTable<'a> {
+    pub fn new(clients: Vec<Client>) -> ClientTable<'a> {
         let state = TableState::default().with_selected(Some(0));
         let widths = [
             Constraint::Max(15),
@@ -36,7 +37,12 @@ impl<'a> ClientTable<'_> {
             .row_highlight_style(Style::new().reversed());
         let len = clients.len();
 
-        ClientTable { state, table, len }
+        ClientTable {
+            state,
+            table,
+            clients,
+            len,
+        }
     }
 
     pub fn move_down(&mut self) {
@@ -52,6 +58,18 @@ impl<'a> ClientTable<'_> {
             if i > 0 {
                 self.state.select_previous();
             }
+        }
+    }
+
+    pub fn selected_index(&self) -> Option<usize> {
+        self.state.selected()
+    }
+
+    pub fn selected_workspace(&self) -> Option<u32> {
+        if let Some(index) = self.state.selected() {
+            return Some(self.clients.get(index)?.workspace.id);
+        } else {
+            return None;
         }
     }
 }

@@ -79,3 +79,10 @@ fn get_workspaces() -> Result<Vec<Workspace>> {
 
     Ok(workspaces)
 }
+
+pub fn switch_to_workspace(id: u32) -> Result<()> {
+    let cmd = format!("dispatch workspace {}", id);
+    send_cmd(&cmd).context(format!("Error sending command hyprctl {}", cmd))?;
+
+    Ok(())
+}

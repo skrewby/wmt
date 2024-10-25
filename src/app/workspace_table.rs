@@ -10,11 +10,12 @@ use crate::hypr::Workspace;
 pub struct WorkspaceTable<'a> {
     state: TableState,
     table: Table<'a>,
+    workspaces: Vec<Workspace>,
     len: usize,
 }
 
 impl<'a> WorkspaceTable<'_> {
-    pub fn new(workspaces: &Vec<Workspace>) -> WorkspaceTable<'a> {
+    pub fn new(workspaces: Vec<Workspace>) -> WorkspaceTable<'a> {
         let state = TableState::default().with_selected(Some(0));
         let widths = [
             Constraint::Max(10),
@@ -38,7 +39,12 @@ impl<'a> WorkspaceTable<'_> {
             .row_highlight_style(Style::new().reversed());
         let len = workspaces.len();
 
-        WorkspaceTable { state, table, len }
+        WorkspaceTable {
+            state,
+            table,
+            workspaces,
+            len,
+        }
     }
 
     pub fn move_down(&mut self) {
@@ -54,6 +60,18 @@ impl<'a> WorkspaceTable<'_> {
             if i > 0 {
                 self.state.select_previous();
             }
+        }
+    }
+
+    pub fn selected_index(&self) -> Option<usize> {
+        self.state.selected()
+    }
+
+    pub fn selected_workspace(&self) -> Option<u32> {
+        if let Some(index) = self.state.selected() {
+            return Some(self.workspaces.get(index)?.id);
+        } else {
+            return None;
         }
     }
 }

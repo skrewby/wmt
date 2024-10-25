@@ -41,9 +41,9 @@ impl<'a> App<'_> {
     }
 
     pub fn new() -> Result<App<'a>> {
-        let hypr = Hypr::new().context("Getting information from Hyprland")?;
-        let client_table = ClientTable::new(&hypr.clients);
-        let workspace_table = WorkspaceTable::new(&hypr.workspaces);
+        let hypr = Hypr::new().context("Connecting to Hyprland")?;
+        let client_table = ClientTable::new(hypr.clients);
+        let workspace_table = WorkspaceTable::new(hypr.workspaces);
         Ok(App {
             exit: false,
             client_table,
@@ -76,6 +76,8 @@ impl<'a> App<'_> {
 
             KeyCode::Up => self.table_move_up(),
             KeyCode::Char('k') => self.table_move_up(),
+
+            KeyCode::Enter => self.switch_to_selected_workspace(),
 
             KeyCode::Tab => self.next_border_screen(),
             _ => {}
@@ -115,6 +117,18 @@ impl<'a> App<'_> {
         match self.current_table {
             SelectedTable::Clients => self.client_table.move_up(),
             SelectedTable::Workspaces => self.workspace_table.move_up(),
+        }
+    }
+
+    fn switch_to_selected_workspace(&mut self) {
+        let id_option = match self.current_table {
+            SelectedTable::Clients => self.client_table.selected_workspace(),
+            SelectedTable::Workspaces => self.workspace_table.selected_workspace(),
+        };
+        if let Some(id) = id_option {
+            if let Ok(_) = crate::hypr::switch_to_workspace(id) {
+                self.exit = true;
+            }
         }
     }
 }
