@@ -19,17 +19,16 @@ use workspace_table::WorkspaceTable;
 
 use crate::hypr::Hypr;
 
-enum SelectedScreen {
+enum SelectedTable {
     Clients,
     Workspaces,
 }
 
 pub struct App<'a> {
     exit: bool,
-    hypr: Hypr,
     client_table: ClientTable<'a>,
     workspace_table: WorkspaceTable<'a>,
-    current_screen: SelectedScreen,
+    current_table: SelectedTable,
 }
 
 impl<'a> App<'_> {
@@ -47,10 +46,9 @@ impl<'a> App<'_> {
         let workspace_table = WorkspaceTable::new(&hypr.workspaces);
         Ok(App {
             exit: false,
-            hypr,
             client_table,
             workspace_table,
-            current_screen: SelectedScreen::Clients,
+            current_table: SelectedTable::Clients,
         })
     }
 
@@ -71,6 +69,14 @@ impl<'a> App<'_> {
     fn handle_key_event(&mut self, key_event: KeyEvent) {
         match key_event.code {
             KeyCode::Char('q') => self.exit(),
+            KeyCode::Char('Q') => self.exit(),
+
+            KeyCode::Down => self.table_move_down(),
+            KeyCode::Char('j') => self.table_move_down(),
+
+            KeyCode::Up => self.table_move_up(),
+            KeyCode::Char('k') => self.table_move_up(),
+
             KeyCode::Tab => self.next_border_screen(),
             _ => {}
         }
@@ -81,21 +87,35 @@ impl<'a> App<'_> {
     }
 
     fn next_border_screen(&mut self) {
-        match self.current_screen {
-            SelectedScreen::Clients => self.current_screen = SelectedScreen::Workspaces,
-            SelectedScreen::Workspaces => self.current_screen = SelectedScreen::Clients,
+        match self.current_table {
+            SelectedTable::Clients => self.current_table = SelectedTable::Workspaces,
+            SelectedTable::Workspaces => self.current_table = SelectedTable::Clients,
         };
     }
 
     fn border_title(&self) -> Vec<Span<'a>> {
         let mut lines: Vec<Span> = vec![" Clients ".into(), "|".into(), " Workspaces ".into()];
 
-        match self.current_screen {
-            SelectedScreen::Clients => lines[0] = lines[0].clone().blue(),
-            SelectedScreen::Workspaces => lines[2] = lines[2].clone().blue(),
+        match self.current_table {
+            SelectedTable::Clients => lines[0] = lines[0].clone().blue(),
+            SelectedTable::Workspaces => lines[2] = lines[2].clone().blue(),
         };
 
         lines
+    }
+
+    fn table_move_down(&mut self) {
+        match self.current_table {
+            SelectedTable::Clients => self.client_table.move_down(),
+            SelectedTable::Workspaces => self.workspace_table.move_down(),
+        }
+    }
+
+    fn table_move_up(&mut self) {
+        match self.current_table {
+            SelectedTable::Clients => self.client_table.move_up(),
+            SelectedTable::Workspaces => self.workspace_table.move_up(),
+        }
     }
 }
 
@@ -118,9 +138,9 @@ impl Widget for &App<'_> {
             vertical: 1,
         });
 
-        match self.current_screen {
-            SelectedScreen::Clients => self.client_table.render(area, buf),
-            SelectedScreen::Workspaces => self.workspace_table.render(area, buf),
+        match self.current_table {
+            SelectedTable::Clients => self.client_table.render(area, buf),
+            SelectedTable::Workspaces => self.workspace_table.render(area, buf),
         };
     }
 }

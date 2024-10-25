@@ -10,6 +10,7 @@ use crate::hypr::Workspace;
 pub struct WorkspaceTable<'a> {
     state: TableState,
     table: Table<'a>,
+    len: usize,
 }
 
 impl<'a> WorkspaceTable<'_> {
@@ -35,8 +36,25 @@ impl<'a> WorkspaceTable<'_> {
         let table = Table::new(rows, widths)
             .header(Row::new(vec!["ID", "Name", "Monitor", "Clients"]).bold())
             .row_highlight_style(Style::new().reversed());
+        let len = workspaces.len();
 
-        WorkspaceTable { state, table }
+        WorkspaceTable { state, table, len }
+    }
+
+    pub fn move_down(&mut self) {
+        if let Some(i) = self.state.selected() {
+            if i < self.len - 1 {
+                self.state.select_next();
+            }
+        }
+    }
+
+    pub fn move_up(&mut self) {
+        if let Some(i) = self.state.selected() {
+            if i > 0 {
+                self.state.select_previous();
+            }
+        }
     }
 }
 
