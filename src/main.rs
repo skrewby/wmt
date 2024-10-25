@@ -9,5 +9,5 @@ fn main() -> Result<()> {
     let mut app = App::new()?;
     let app_result = app.run(&mut terminal);
     ratatui::restore();
-    Ok(app_result?)
+    app_result
 }

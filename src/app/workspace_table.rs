@@ -63,10 +63,6 @@ impl<'a> WorkspaceTable<'_> {
         }
     }
 
-    pub fn selected_index(&self) -> Option<usize> {
-        self.state.selected()
-    }
-
     pub fn selected_workspace(&self) -> Option<u32> {
         if let Some(index) = self.state.selected() {
             return Some(self.workspaces.get(index)?.id);

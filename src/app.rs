@@ -1,8 +1,6 @@
 mod client_table;
 mod workspace_table;
 
-use std::io;
-
 use anyhow::{Context, Result};
 use client_table::ClientTable;
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
@@ -32,7 +30,7 @@ pub struct App<'a> {
 }
 
 impl<'a> App<'_> {
-    pub fn run(&mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {
+    pub fn run(&mut self, terminal: &mut DefaultTerminal) -> Result<()> {
         while !self.exit {
             terminal.draw(|frame| self.draw(frame))?;
             self.handle_events()?;
@@ -56,7 +54,7 @@ impl<'a> App<'_> {
         frame.render_widget(self, frame.area());
     }
 
-    fn handle_events(&mut self) -> io::Result<()> {
+    fn handle_events(&mut self) -> Result<()> {
         match event::read()? {
             Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {
                 self.handle_key_event(key_event)
@@ -78,6 +76,16 @@ impl<'a> App<'_> {
             KeyCode::Char('k') => self.table_move_up(),
 
             KeyCode::Enter => self.switch_to_selected_workspace(),
+            KeyCode::Char('0') => self.switch_to_workspace(0),
+            KeyCode::Char('1') => self.switch_to_workspace(1),
+            KeyCode::Char('2') => self.switch_to_workspace(2),
+            KeyCode::Char('3') => self.switch_to_workspace(3),
+            KeyCode::Char('4') => self.switch_to_workspace(4),
+            KeyCode::Char('5') => self.switch_to_workspace(5),
+            KeyCode::Char('6') => self.switch_to_workspace(6),
+            KeyCode::Char('7') => self.switch_to_workspace(7),
+            KeyCode::Char('8') => self.switch_to_workspace(8),
+            KeyCode::Char('9') => self.switch_to_workspace(9),
 
             KeyCode::Tab => self.next_border_screen(),
             _ => {}
@@ -129,6 +137,12 @@ impl<'a> App<'_> {
             if let Ok(_) = crate::hypr::switch_to_workspace(id) {
                 self.exit = true;
             }
+        }
+    }
+
+    fn switch_to_workspace(&mut self, id: u32) {
+        if let Ok(_) = crate::hypr::switch_to_workspace(id) {
+            self.exit = true;
         }
     }
 }

@@ -66,16 +66,18 @@ fn send_cmd(cmd: &str) -> Result<String> {
 
 fn get_clients() -> Result<Vec<Client>> {
     let res = send_cmd("j/clients").context("Error sending command: hyprctl -j clients")?;
-    let clients: Vec<Client> =
+    let mut clients: Vec<Client> =
         serde_json::from_str(&res).context(format!("Parsing client data: \n\t{}", res))?;
+    clients.sort_by(|a, b| a.workspace.id.cmp(&b.workspace.id));
 
     Ok(clients)
 }
 
 fn get_workspaces() -> Result<Vec<Workspace>> {
     let res = send_cmd("j/workspaces").context("Error sending command: hyprctl -j workspaces")?;
-    let workspaces: Vec<Workspace> =
+    let mut workspaces: Vec<Workspace> =
         serde_json::from_str(&res).context(format!("Parsing workspace data: \n\t{}", res))?;
+    workspaces.sort_by(|a, b| a.id.cmp(&b.id));
 
     Ok(workspaces)
 }
