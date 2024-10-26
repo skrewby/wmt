@@ -18,8 +18,7 @@ impl HelpScreen {
     }
 
     fn render_keybinds(&self, area: Rect, buf: &mut Buffer) {
-        Paragraph::new("Keybinds")
-            .style(Style::new().blue())
+        Paragraph::new("Keybinds".blue())
             .alignment(Alignment::Center)
             .render(area, buf);
 
@@ -28,8 +27,7 @@ impl HelpScreen {
     }
 
     fn render_table_screen_keybinds(&self, area: Rect, buf: &mut Buffer) {
-        Paragraph::new("Main Screen")
-            .style(Style::new().white().bold())
+        Paragraph::new("Main Screen".bold())
             .alignment(Alignment::Left)
             .render(area, buf);
         let area = area.offset(Offset { x: 0, y: 1 });
@@ -43,9 +41,7 @@ impl HelpScreen {
             Row::new(vec!["Focus client", "Enter"]),
             Row::new(vec!["Switch workspace", "0-9"]),
         ];
-        Table::new(rows, widths)
-            .style(Style::new().white().not_bold())
-            .render(area, buf);
+        Table::new(rows, widths).render(area, buf);
     }
 }
 
