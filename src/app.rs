@@ -51,7 +51,7 @@ impl App {
             KeyCode::Char('Q') => self.exit(),
 
             _ => {
-                if let Some(widget) = self.screens.first_mut() {
+                if let Some(widget) = self.screens.last_mut() {
                     if let Some(screen_event) = widget.handle_key_event(key_event) {
                         self.handle_screen_event(screen_event);
                     }
@@ -63,6 +63,14 @@ impl App {
     fn handle_screen_event(&mut self, screen_event: ScreenEvent) {
         match screen_event {
             ScreenEvent::Close => self.exit = true,
+            ScreenEvent::AddScreen(screen) => {
+                self.screens.push(screen);
+            }
+            ScreenEvent::PopScreen => {
+                if let None = self.screens.pop() {
+                    self.exit = true;
+                }
+            }
         }
     }
 
@@ -73,7 +81,7 @@ impl App {
 
 impl Widget for &App {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        if let Some(widget) = self.screens.first() {
+        if let Some(widget) = self.screens.last() {
             widget.render_ref(area, buf);
         }
     }

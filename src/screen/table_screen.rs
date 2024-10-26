@@ -1,5 +1,5 @@
 use anyhow::{Context, Result};
-use crossterm::event::{Event, KeyCode, KeyEvent, KeyEventKind};
+use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::{
     buffer::Buffer,
     layout::{Margin, Rect},
@@ -14,7 +14,7 @@ use crate::{
     hypr::Hypr,
 };
 
-use super::{Screen, ScreenEvent, ScreenWidget};
+use super::{help_screen::HelpScreen, Screen, ScreenEvent, ScreenWidget};
 
 enum SelectedTable {
     Clients,
@@ -146,6 +146,8 @@ impl ScreenWidget for TableScreen<'_> {
             KeyCode::Char('7') => self.switch_to_workspace(7),
             KeyCode::Char('8') => self.switch_to_workspace(8),
             KeyCode::Char('9') => self.switch_to_workspace(9),
+
+            KeyCode::Char('?') => Some(ScreenEvent::AddScreen(Box::new(HelpScreen::new()))),
 
             KeyCode::Tab => self.next_border_screen(),
             _ => None,
