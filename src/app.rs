@@ -1,35 +1,18 @@
-mod client_table;
-mod workspace_table;
+pub mod client_table;
+pub mod workspace_table;
 
 use anyhow::{Context, Result};
-use client_table::ClientTable;
 use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind};
-use ratatui::{
-    buffer::Buffer,
-    layout::{Margin, Rect},
-    style::Stylize,
-    symbols::border,
-    text::{Line, Span},
-    widgets::{Block, Widget},
-    DefaultTerminal, Frame,
-};
-use workspace_table::WorkspaceTable;
+use ratatui::{buffer::Buffer, layout::Rect, widgets::Widget, DefaultTerminal, Frame};
 
-use crate::hypr::Hypr;
+use crate::screen::{table_screen::TableScreen, Screen, ScreenEvent};
 
-enum SelectedTable {
-    Clients,
-    Workspaces,
-}
-
-pub struct App<'a> {
+pub struct App {
     exit: bool,
-    client_table: ClientTable<'a>,
-    workspace_table: WorkspaceTable<'a>,
-    current_table: SelectedTable,
+    screens: Vec<Box<dyn Screen>>,
 }
 
-impl<'a> App<'_> {
+impl App {
     pub fn run(&mut self, terminal: &mut DefaultTerminal) -> Result<()> {
         while !self.exit {
             terminal.draw(|frame| self.draw(frame))?;
@@ -38,15 +21,13 @@ impl<'a> App<'_> {
         Ok(())
     }
 
-    pub fn new() -> Result<App<'a>> {
-        let hypr = Hypr::new().context("Connecting to Hyprland")?;
-        let client_table = ClientTable::new(hypr.clients);
-        let workspace_table = WorkspaceTable::new(hypr.workspaces);
+    pub fn new() -> Result<App> {
+        let table_screen = TableScreen::new().context("Creating table screen")?;
+        let mut screens: Vec<Box<dyn Screen>> = Vec::new();
+        screens.push(Box::new(table_screen));
         Ok(App {
             exit: false,
-            client_table,
-            workspace_table,
-            current_table: SelectedTable::Clients,
+            screens,
         })
     }
 
@@ -69,106 +50,31 @@ impl<'a> App<'_> {
             KeyCode::Char('q') => self.exit(),
             KeyCode::Char('Q') => self.exit(),
 
-            KeyCode::Down => self.table_move_down(),
-            KeyCode::Char('j') => self.table_move_down(),
+            _ => {
+                if let Some(widget) = self.screens.first_mut() {
+                    if let Some(screen_event) = widget.handle_key_event(key_event) {
+                        self.handle_screen_event(screen_event);
+                    }
+                }
+            }
+        }
+    }
 
-            KeyCode::Up => self.table_move_up(),
-            KeyCode::Char('k') => self.table_move_up(),
-
-            KeyCode::Enter => self.switch_to_selected_workspace(),
-            KeyCode::Char('0') => self.switch_to_workspace(0),
-            KeyCode::Char('1') => self.switch_to_workspace(1),
-            KeyCode::Char('2') => self.switch_to_workspace(2),
-            KeyCode::Char('3') => self.switch_to_workspace(3),
-            KeyCode::Char('4') => self.switch_to_workspace(4),
-            KeyCode::Char('5') => self.switch_to_workspace(5),
-            KeyCode::Char('6') => self.switch_to_workspace(6),
-            KeyCode::Char('7') => self.switch_to_workspace(7),
-            KeyCode::Char('8') => self.switch_to_workspace(8),
-            KeyCode::Char('9') => self.switch_to_workspace(9),
-
-            KeyCode::Tab => self.next_border_screen(),
-            _ => {}
+    fn handle_screen_event(&mut self, screen_event: ScreenEvent) {
+        match screen_event {
+            ScreenEvent::Close => self.exit = true,
         }
     }
 
     fn exit(&mut self) {
         self.exit = true;
     }
-
-    fn next_border_screen(&mut self) {
-        match self.current_table {
-            SelectedTable::Clients => self.current_table = SelectedTable::Workspaces,
-            SelectedTable::Workspaces => self.current_table = SelectedTable::Clients,
-        };
-    }
-
-    fn border_title(&self) -> Vec<Span<'a>> {
-        let mut lines: Vec<Span> = vec![" Clients ".into(), "|".into(), " Workspaces ".into()];
-
-        match self.current_table {
-            SelectedTable::Clients => lines[0] = lines[0].clone().blue(),
-            SelectedTable::Workspaces => lines[2] = lines[2].clone().blue(),
-        };
-
-        lines
-    }
-
-    fn table_move_down(&mut self) {
-        match self.current_table {
-            SelectedTable::Clients => self.client_table.move_down(),
-            SelectedTable::Workspaces => self.workspace_table.move_down(),
-        }
-    }
-
-    fn table_move_up(&mut self) {
-        match self.current_table {
-            SelectedTable::Clients => self.client_table.move_up(),
-            SelectedTable::Workspaces => self.workspace_table.move_up(),
-        }
-    }
-
-    fn switch_to_selected_workspace(&mut self) {
-        let (id_option, client_address) = match self.current_table {
-            SelectedTable::Clients => self.client_table.selected_workspace(),
-            SelectedTable::Workspaces => (self.workspace_table.selected_workspace(), None),
-        };
-        if let Some(id) = id_option {
-            if let Ok(_) = crate::hypr::switch_to_workspace(id, client_address) {
-                self.exit = true;
-            }
-        }
-    }
-
-    fn switch_to_workspace(&mut self, id: u32) {
-        if let Ok(_) = crate::hypr::switch_to_workspace(id, None) {
-            self.exit = true;
-        }
-    }
 }
 
-impl Widget for &App<'_> {
+impl Widget for &App {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        let instructions = Line::from(vec![
-            " Help ".into(),
-            "<?>".blue().bold(),
-            " Quit ".into(),
-            "<Q> ".blue().bold(),
-        ]);
-        Block::bordered()
-            .title_top(self.border_title())
-            .title_bottom(instructions.centered())
-            .border_set(border::THICK)
-            .render(area, buf);
-
-        let area = area.inner(Margin {
-            horizontal: 1,
-            vertical: 1,
-        });
-
-        match self.current_table {
-            SelectedTable::Clients => self.client_table.render(area, buf),
-            SelectedTable::Workspaces => self.workspace_table.render(area, buf),
-        };
+        if let Some(widget) = self.screens.first() {
+            widget.render_ref(area, buf);
+        }
     }
 }

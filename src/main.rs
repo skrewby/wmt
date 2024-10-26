@@ -1,5 +1,6 @@
 mod app;
 mod hypr;
+mod screen;
 
 use anyhow::Result;
 use app::App;
