@@ -1,7 +1,7 @@
 use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::{
     buffer::Buffer,
-    layout::{Alignment, Constraint, Direction, Layout, Margin, Offset, Rect},
+    layout::{Alignment, Constraint, Margin, Offset, Rect},
     style::{Style, Stylize},
     symbols::border,
     text::Line,
