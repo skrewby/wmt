@@ -71,6 +71,14 @@ impl App {
                     self.exit = true;
                 }
             }
+            ScreenEvent::PopAndRefresh => {
+                if let None = self.screens.pop() {
+                    self.exit = true;
+                }
+                if let Some(widget) = self.screens.last_mut() {
+                    widget.refresh();
+                }
+            }
         }
     }
 

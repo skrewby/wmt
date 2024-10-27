@@ -44,7 +44,7 @@ impl<'a> SendWorkspaceScreen<'_> {
         let id_option = self.workspace_table.selected_workspace();
         if let Some(id) = id_option {
             if let Ok(_) = crate::hypr::send_to_workspace(id, self.client_address.clone()) {
-                return Some(ScreenEvent::Close);
+                return Some(ScreenEvent::PopAndRefresh);
             }
         }
 
@@ -53,7 +53,7 @@ impl<'a> SendWorkspaceScreen<'_> {
 
     fn send_to_workspace(&mut self, id: u32) -> Option<ScreenEvent> {
         if let Ok(_) = crate::hypr::send_to_workspace(id, self.client_address.clone()) {
-            return Some(ScreenEvent::Close);
+            return Some(ScreenEvent::PopAndRefresh);
         }
 
         None
@@ -110,6 +110,12 @@ impl ScreenWidget for SendWorkspaceScreen<'_> {
             KeyCode::Char('9') => self.send_to_workspace(9),
 
             _ => None,
+        }
+    }
+
+    fn refresh(&mut self) {
+        if let Ok(hypr) = Hypr::new().context("Connecting to Hyprland") {
+            self.workspace_table = WorkspaceTable::new(hypr.workspaces);
         }
     }
 }

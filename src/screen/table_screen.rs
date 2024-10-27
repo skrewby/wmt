@@ -167,6 +167,13 @@ impl ScreenWidget for TableScreen<'_> {
             _ => None,
         }
     }
+
+    fn refresh(&mut self) {
+        if let Ok(hypr) = Hypr::new().context("Connecting to Hyprland") {
+            self.client_table = ClientTable::new(hypr.clients);
+            self.workspace_table = WorkspaceTable::new(hypr.workspaces);
+        }
+    }
 }
 
 impl Screen for TableScreen<'_> {}

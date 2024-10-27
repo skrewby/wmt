@@ -91,5 +91,7 @@ impl ScreenWidget for HelpScreen {
             _ => None,
         }
     }
+
+    fn refresh(&mut self) {}
 }
 impl Screen for HelpScreen {}
