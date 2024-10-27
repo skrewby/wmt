@@ -59,14 +59,19 @@ fn connect() -> Result<UnixStream> {
 
 fn send_cmd(cmd: &str) -> Result<String> {
     let mut stream = connect()?;
-    stream.write_all(cmd.as_bytes())?;
+    stream
+        .write_all(cmd.as_bytes())
+        .context(format!("Error sending command hyprctl {}", cmd))?;
     let mut response = String::new();
-    stream.read_to_string(&mut response)?;
+    stream.read_to_string(&mut response).context(format!(
+        "Error reading response from command hyprctl {}",
+        cmd
+    ))?;
     Ok(response)
 }
 
 fn get_clients() -> Result<Vec<Client>> {
-    let res = send_cmd("j/clients").context("Error sending command: hyprctl -j clients")?;
+    let res = send_cmd("j/clients")?;
     let mut clients: Vec<Client> =
         serde_json::from_str(&res).context(format!("Parsing client data: \n\t{}", res))?;
     clients.sort_by(|a, b| a.workspace.id.cmp(&b.workspace.id));
@@ -75,7 +80,7 @@ fn get_clients() -> Result<Vec<Client>> {
 }
 
 fn get_workspaces() -> Result<Vec<Workspace>> {
-    let res = send_cmd("j/workspaces").context("Error sending command: hyprctl -j workspaces")?;
+    let res = send_cmd("j/workspaces")?;
     let mut workspaces: Vec<Workspace> =
         serde_json::from_str(&res).context(format!("Parsing workspace data: \n\t{}", res))?;
     workspaces.sort_by(|a, b| a.id.cmp(&b.id));
@@ -85,10 +90,10 @@ fn get_workspaces() -> Result<Vec<Workspace>> {
 
 pub fn switch_to_workspace(id: u32, focus_client: Option<String>) -> Result<()> {
     let cmd = format!("dispatch workspace {}", id);
-    send_cmd(&cmd).context(format!("Error sending command hyprctl {}", cmd))?;
+    send_cmd(&cmd)?;
     if let Some(client_address) = focus_client {
         let cmd = format!("dispatch focuswindow address:{}", client_address);
-        send_cmd(&cmd).context(format!("Error sending command hyprctl {}", cmd))?;
+        send_cmd(&cmd)?;
     }
 
     Ok(())
@@ -99,7 +104,7 @@ pub fn send_to_workspace(workspace: u32, client_address: String) -> Result<()> {
         "dispatch movetoworkspacesilent {},address:{}",
         workspace, client_address
     );
-    send_cmd(&cmd).context(format!("Error sending command hyprctl {}", cmd))?;
+    send_cmd(&cmd)?;
 
     Ok(())
 }

@@ -1,4 +1,4 @@
-use anyhow::{Context, Result};
+use anyhow::Context;
 use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::{
     buffer::Buffer,
@@ -9,10 +9,7 @@ use ratatui::{
     widgets::{Block, Widget, WidgetRef},
 };
 
-use crate::{
-    app::workspace_table::{self, WorkspaceTable},
-    hypr::{Hypr, Workspace},
-};
+use crate::{app::workspace_table::WorkspaceTable, hypr::Hypr};
 
 use super::{help_screen::HelpScreen, Screen, ScreenEvent, ScreenWidget};
 
