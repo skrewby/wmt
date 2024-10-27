@@ -2,6 +2,7 @@ use crossterm::event::KeyEvent;
 use ratatui::widgets::WidgetRef;
 
 pub mod help_screen;
+pub mod send_workspace_screen;
 pub mod table_screen;
 
 pub enum ScreenEvent {

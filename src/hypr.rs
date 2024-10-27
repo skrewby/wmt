@@ -93,3 +93,13 @@ pub fn switch_to_workspace(id: u32, focus_client: Option<String>) -> Result<()> 
 
     Ok(())
 }
+
+pub fn send_to_workspace(workspace: u32, client_address: String) -> Result<()> {
+    let cmd = format!(
+        "dispatch movetoworkspacesilent {},address:{}",
+        workspace, client_address
+    );
+    send_cmd(&cmd).context(format!("Error sending command hyprctl {}", cmd))?;
+
+    Ok(())
+}

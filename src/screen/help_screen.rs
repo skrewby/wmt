@@ -2,7 +2,7 @@ use crossterm::event::{KeyCode, KeyEvent};
 use ratatui::{
     buffer::Buffer,
     layout::{Alignment, Constraint, Margin, Offset, Rect},
-    style::{Style, Stylize},
+    style::Stylize,
     symbols::border,
     text::Line,
     widgets::{Block, Paragraph, Row, Table, Widget, WidgetRef},
@@ -24,6 +24,8 @@ impl HelpScreen {
 
         let area = area.offset(Offset { x: 0, y: 1 });
         self.render_table_screen_keybinds(area, buf);
+        let area = area.offset(Offset { x: 0, y: 9 });
+        self.render_table_send_workspace(area, buf);
     }
 
     fn render_table_screen_keybinds(&self, area: Rect, buf: &mut Buffer) {
@@ -40,6 +42,21 @@ impl HelpScreen {
             Row::new(vec!["Up", "Arrow Up"]),
             Row::new(vec!["Focus client", "Enter"]),
             Row::new(vec!["Switch workspace", "0-9"]),
+            Row::new(vec!["Send to workspace", "s"]),
+        ];
+        Table::new(rows, widths).render(area, buf);
+    }
+
+    fn render_table_send_workspace(&self, area: Rect, buf: &mut Buffer) {
+        Paragraph::new("Send to Workspace Mode".bold())
+            .alignment(Alignment::Left)
+            .render(area, buf);
+        let area = area.offset(Offset { x: 0, y: 1 });
+
+        let widths = [Constraint::Max(20), Constraint::Max(10)];
+        let rows = [
+            Row::new(vec!["Choose workspace", "Enter"]),
+            Row::new(vec!["Choose workspace", "0-9"]),
         ];
         Table::new(rows, widths).render(area, buf);
     }

@@ -10,7 +10,7 @@ use crate::hypr::Workspace;
 pub struct WorkspaceTable<'a> {
     state: TableState,
     table: Table<'a>,
-    workspaces: Vec<Workspace>,
+    pub workspaces: Vec<Workspace>,
     len: usize,
 }
 

@@ -14,7 +14,10 @@ use crate::{
     hypr::Hypr,
 };
 
-use super::{help_screen::HelpScreen, Screen, ScreenEvent, ScreenWidget};
+use super::{
+    help_screen::HelpScreen, send_workspace_screen::SendWorkspaceScreen, Screen, ScreenEvent,
+    ScreenWidget,
+};
 
 enum SelectedTable {
     Clients,
@@ -98,6 +101,16 @@ impl<'a> TableScreen<'_> {
 
         None
     }
+
+    fn send_selected_client_to_workspace(&mut self) -> Option<ScreenEvent> {
+        if let Some(client_address) = self.client_table.selected_client() {
+            return Some(ScreenEvent::AddScreen(Box::new(SendWorkspaceScreen::new(
+                client_address,
+            ))));
+        };
+
+        None
+    }
 }
 
 impl WidgetRef for TableScreen<'_> {
@@ -148,10 +161,12 @@ impl ScreenWidget for TableScreen<'_> {
             KeyCode::Char('9') => self.switch_to_workspace(9),
 
             KeyCode::Char('?') => Some(ScreenEvent::AddScreen(Box::new(HelpScreen::new()))),
+            KeyCode::Char('s') => self.send_selected_client_to_workspace(),
 
             KeyCode::Tab => self.next_border_screen(),
             _ => None,
         }
     }
 }
+
 impl Screen for TableScreen<'_> {}

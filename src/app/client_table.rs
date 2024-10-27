@@ -72,6 +72,18 @@ impl<'a> ClientTable<'_> {
             return (None, None);
         }
     }
+
+    pub fn selected_client(&self) -> Option<String> {
+        if let Some(index) = self.state.selected() {
+            if let Some(client) = self.clients.get(index) {
+                return Some(client.address.clone());
+            } else {
+                return None;
+            }
+        } else {
+            return None;
+        }
+    }
 }
 
 impl WidgetRef for ClientTable<'_> {
