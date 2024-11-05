@@ -24,7 +24,7 @@ impl HelpScreen {
 
         let area = area.offset(Offset { x: 0, y: 1 });
         self.render_table_screen_keybinds(area, buf);
-        let area = area.offset(Offset { x: 0, y: 9 });
+        let area = area.offset(Offset { x: 0, y: 10 });
         self.render_table_send_workspace(area, buf);
     }
 
@@ -43,6 +43,7 @@ impl HelpScreen {
             Row::new(vec!["Focus client", "Enter"]),
             Row::new(vec!["Switch workspace", "0-9"]),
             Row::new(vec!["Send to workspace", "s"]),
+            Row::new(vec!["Switch screen", "Tab"]),
         ];
         Table::new(rows, widths).render(area, buf);
     }
