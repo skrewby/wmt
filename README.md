@@ -8,7 +8,10 @@ A very simple workspace viewer tool for hyprland. I normally launch it from a ke
 - Clone the repository
 - Run `cargo build -r`
 - Move the `wmt` binary in `target/release` to a directory that is on your `$PATH`
-- Optional: add a keybind on hyprland.conf that launches the program
+- Optional: add a keybind on hyprland.conf that launches the program, example:
+```
+bind = $mainMod, W, exec, [float; focus 1; stayfocused; center; size 800 400] (kitty -e wmt)
+```
 
 ## Usage
 - Enter the ID number to automatically jump to that workspace
